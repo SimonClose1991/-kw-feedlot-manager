@@ -1,0 +1,27 @@
+# Render blueprint that unzips app.zip, then builds and runs the app.
+# Your GitHub repo only needs TWO files: this file and app.zip.
+
+databases:
+  - name: feedlot-db
+    plan: free
+    databaseName: feedlot
+    user: feedlot
+
+services:
+  - type: web
+    name: kw-feedlot-manager
+    runtime: node
+    plan: free
+    # --include=dev forces install of build tools (vite, esbuild) which Render
+    # would otherwise skip in production. NPM_CONFIG_PRODUCTION=false reinforces it.
+    buildCommand: "unzip -o app.zip -d . && npm install --include=dev && npm run build"
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NPM_CONFIG_PRODUCTION
+        value: "false"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: feedlot-db
+          property: connectionString
